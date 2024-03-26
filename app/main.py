@@ -36,7 +36,7 @@ def handle_connections(conn):
                 response = OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + user_agent
             else: 
                 response = NOT_FOUND_404 + END_HEADER 
-            # response 
+            # response
             conn.send(response)
         else: 
             response = NOT_FOUND_404 + END_HEADER
@@ -45,17 +45,27 @@ def handle_connections(conn):
 
 
 def main():
-    print('Server is starting ... ')
-    HOST = '127.0.0.1'
+    print("Server is starting ... ")
+    HOST = "127.0.0.1"
     PORT = 4221
 
-    socket_server = socket.create_server((HOST, PORT), reuse_port=False)
-    while True: 
-        conn, addr = socket_server.accept()
-        print('Connected to: {}:{}'.format(addr[0], addr[1]))
-        worker = threading.Thread(target=handle_connections, args=(conn, ))
-        # worker.daemon = True
-        worker.start()
+    try:
+        socket_server = socket.create_server((HOST, PORT), reuse_port=False)
+        while True:
+            conn, addr = socket_server.accept()
+            print("Connected to: {}:{}".format(addr[0], addr[1]))
+            worker = threading.Thread(target=handle_connections, args=(conn,))
+            worker.start()
+    except KeyboardInterrupt:
+        print("Server is shutting down...")
+        sys.exit(0)
+    except Exception as e:
+        print("An error occurred:", e)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":
