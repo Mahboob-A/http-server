@@ -48,14 +48,14 @@ def main():
     print('Server is starting ... ')
     HOST = '127.0.0.1'
     PORT = 4221
-    
-    with socket.create_server((HOST, PORT)) as socket_server: 
-        while True: 
-            conn, addr = socket_server.accept()
-            print('Connected to: {}:{}'.format(addr[0], addr[1]))
-            worker = threading.Thread(target=handle_connections, args=(conn, ))
-            # worker.daemon = True 
-            worker.start()
+
+    socket_server = socket.create_server((HOST, PORT), reuse_port=False)
+    while True: 
+        conn, addr = socket_server.accept()
+        print('Connected to: {}:{}'.format(addr[0], addr[1]))
+        worker = threading.Thread(target=handle_connections, args=(conn, ))
+        # worker.daemon = True
+        worker.start()
 
 
 if __name__ == "__main__":
