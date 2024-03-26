@@ -37,11 +37,11 @@ def handle_connections(conn):
             else: 
                 response = NOT_FOUND_404 + END_HEADER 
             # response
-            conn.send(response)
+            # conn.send(response)
         else: 
             response = NOT_FOUND_404 + END_HEADER
             # response
-            conn.send(response)    
+    conn.send(response)    
 
 
 # def main():
