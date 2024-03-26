@@ -21,31 +21,17 @@ def main():
             with conn: 
                 print('Server connected to {}:{}'.format(addr[0], addr[1]))
                 data = conn.recv(1024).decode('utf-8')
-                print(data)
+                # print(data)
                 data = data.split('\r\n')
-                print(data)
-                data = data[0].split(' ')
-                print(data)
-                path = data[1]
-                print(path)
-                # data.split('\r\n')
-                # ['GET /index.html HTTP/1.1', 'Host: localhost:4221', 'User-Agent: curl/7.81.0', 'Accept: */*', '', '']
+                # print(data)
+                data = data[2].split(' ')
+                # print(data)
+                header = data[1]
+                # print(header)
 
-                # data[0].split(' ')
-                # GET /index.html HTTP/1.1
-
-                # data[1] # /index.html
-                # ['GET', '/index.html', 'HTTP/1.1']
-
-                if path == '/': 
-                    response = "HTTP/1.1 200 OK\r\n\r\n".encode("utf-8")
-                elif path.startswith('/echo/'):
-                    body_data = path[6:]
-                    CONTENT_TYPE = 'Content-Type: text/plain\r\n'
-                    CONTENT_LENGTH = f'Content-Length: {len(body_data)}\r\n'
-                    response = (OK_200 +  CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + body_data).encode('utf-8')
-                else: 
-                    response = (NOT_FOUND_404.encode('utf-8'))
+                CONTENT_TYPE = 'Content-Type: text/plain\r\n'
+                CONTENT_LENGTH = f'Content-Length: {len(header)}\r\n'
+                response = (OK_200 +  CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + header).encode('utf-8')
                 conn.send(response)
         except: 
             print('Server closed!')
