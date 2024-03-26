@@ -2,7 +2,7 @@
 import socket
 import threading
 import sys 
-
+from concurrent.futures import ThreadPoolExecutor
 
 OK_200 = b'HTTP/1.1 200 OK\r\n'
 NOT_FOUND_404 = b'HTTP/1.1 404 Not Found\r\n'
@@ -44,6 +44,26 @@ def handle_connections(conn):
             conn.send(response)    
 
 
+# def main():
+#     print("Server is starting ... ")
+#     HOST = "127.0.0.1"
+#     PORT = 4221
+
+#     try:
+#         socket_server = socket.create_server((HOST, PORT), reuse_port=False)
+#         while True:
+#             conn, addr = socket_server.accept()
+#             print("Connected to: {}:{}".format(addr[0], addr[1]))
+#             worker = threading.Thread(target=handle_connections, args=(conn,))
+#             worker.start()
+#     except KeyboardInterrupt:
+#         print("Server is shutting down...")
+#         sys.exit(0)
+#     except Exception as e:
+#         print("An error occurred:", e)
+#         sys.exit(1)
+
+
 def main():
     print("Server is starting ... ")
     HOST = "127.0.0.1"
@@ -51,11 +71,11 @@ def main():
 
     try:
         socket_server = socket.create_server((HOST, PORT), reuse_port=False)
-        while True:
-            conn, addr = socket_server.accept()
-            print("Connected to: {}:{}".format(addr[0], addr[1]))
-            worker = threading.Thread(target=handle_connections, args=(conn,))
-            worker.start()
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            while True:
+                conn, addr = socket_server.accept()
+                print("Connected to: {}:{}".format(addr[0], addr[1]))
+                executor.submit(handle_connections, conn)
     except KeyboardInterrupt:
         print("Server is shutting down...")
         sys.exit(0)
