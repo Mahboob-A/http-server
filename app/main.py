@@ -26,8 +26,7 @@ def handle_connections(conn):
             print('user_agent: ', user_agent)
 
             if path == b'/': 
-                # response = OK_200 + END_HEADER
-                pass 
+                response = OK_200 + END_HEADER
             elif path.startswith(b'/echo/'):
                 body_data = path[6:] # already in bytes 
                 CONTENT_LENGTH = get_content_length(body_data)
@@ -37,10 +36,12 @@ def handle_connections(conn):
                 response = OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + user_agent
             else: 
                 response = NOT_FOUND_404 + END_HEADER 
+            # response 
+            conn.send(response)
         else: 
             response = NOT_FOUND_404 + END_HEADER
-        # response
-        conn.send(response)    
+            # response
+            conn.send(response)    
 
 
 def main():
