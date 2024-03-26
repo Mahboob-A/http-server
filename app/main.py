@@ -9,7 +9,18 @@ def main():
     # Uncomment this to pass the first stage
     #
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
-    server_socket.accept() # wait for client
+    while True: 
+        try: 
+            conn, addr = server_socket.accept() 
+            with conn: 
+                print('Server connected to {}:{}'.format(addr[0], addr[1]))
+                data = conn.recv(1024).encode('utf-8')
+                conn.send('HTTP/1.1 OK\r\n\r\n'.encode('utf-8'))
+        except: 
+            print('Server closed!')
+            server_socket.close()
+            break
+    
 
 
 if __name__ == "__main__":
