@@ -45,7 +45,7 @@ def main():
                     CONTENT_LENGTH = f'Content-Length: {len(body_data)}\r\n'
                     response = (OK_200 +  CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + body_data).encode('utf-8')
                 else: 
-                    response = "HTTP/1.1 404 Not Found\r\n\r\n".encode("utf-8")
+                    response = NOT_FOUND_404.encode('utf-8')
                 conn.send(response)
         except: 
             print('Server closed!')
