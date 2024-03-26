@@ -17,7 +17,7 @@ def main():
     CONTENT_TYPE = b'Content-Type: text/plain\r\n'
 
     def get_content_length(content): 
-        return f"Content-Length: {len(content)}\r\n"
+        return f"Content-Length: {len(content)}\r\n".encode('utf-8')
 
     tmp = None 
     while True: 
