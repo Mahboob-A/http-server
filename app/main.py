@@ -8,7 +8,7 @@ def main():
 
     # Uncomment this to pass the first stage
     #
-    server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
+    server_socket = socket.create_server(("localhost", 4221), reuse_port=False)
     print('server started...')
 
     OK_200 = b'HTTP/1.1 200 OK\r\n'
@@ -37,8 +37,8 @@ def main():
                 print('user_agent: ', user_agent)
 
                 if path == b'/': 
-                    response = OK_200
-                elif path == b'/echo/':
+                    response = OK_200 + END_HEADER
+                elif path.startswith(b'/echo/'):
                     body_data = path[6:] # already in bytes 
                     CONTENT_LENGTH = get_content_length(body_data)
                     response = OK_200 +  CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + body_data
@@ -46,7 +46,7 @@ def main():
                     CONTENT_LENGTH = get_content_length(user_agent)
                     response = OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + user_agent
                 else: 
-                    response = NOT_FOUND_404
+                    response = NOT_FOUND_404 + END_HEADER 
                     
                 # response 
                 conn.send(response)
