@@ -11,10 +11,13 @@ def main():
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     print('server started...')
 
-    OK_200 = 'HTTP/1.1 200 OK\r\n'
-    NOT_FOUND_404 = 'HTTP/1.1 404 Not Found\r\n'
-    END_HEADER = '\r\n'
-    CONTENT_TYPE = "Content-Type: text/plain\r\n"
+    OK_200 = b'HTTP/1.1 200 OK\r\n'
+    NOT_FOUND_404 = b'HTTP/1.1 404 Not Found\r\n'
+    END_HEADER = b'\r\n'
+    CONTENT_TYPE = b'Content-Type: text/plain\r\n'
+
+    def get_content_length(content): 
+        return f"Content-Length: {len(content)}\r\n"
 
     tmp = None 
     while True: 
@@ -22,46 +25,30 @@ def main():
             conn, addr = server_socket.accept() 
             with conn: 
                 print('Server connected to {}:{}'.format(addr[0], addr[1]))
-                data = conn.recv(1024).decode('utf-8')
-                tmp = data 
-                print(data)
-                tmp = tmp.split("\r\n")
-                print("split data: ", tmp)
-                tmp = tmp[0].split(" ")
-                print("data[0]: ", tmp)
-                path = tmp[1]
-                print(path)
-                # data.split('\r\n')
-                # ['GET /index.html HTTP/1.1', 'Host: localhost:4221', 'User-Agent: curl/7.81.0', 'Accept: */*', '', '']
 
-                # data[0].split(' ')
-                # GET /index.html HTTP/1.1
+                # all data in bytes
+                data = conn.recv(1024)
+                headers = data.split(b'\r\n')
+                path = headers[0].split()[1]
+                user_agent = headers[2].split()[1]  # user_agent:  b'curl/7.81.0'
 
-                # data[1] # /index.html
-                # ['GET', '/index.html', 'HTTP/1.1']
+                print('headers: ', headers)
+                print('path: ', path)
+                print('user_agent: ', user_agent)
 
-                if path == '/': 
-                    response = "HTTP/1.1 200 OK\r\n\r\n".encode("utf-8")
-                elif path.startswith('/echo/'):
-                    body_data = path[6:]
-                    CONTENT_LENGTH = f'Content-Length: {len(body_data)}\r\n'
-                    response = (OK_200 +  CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + body_data).encode('utf-8')
-                elif path.startswith('/user-agent'): 
-                    tmp = data 
-                    tmp = tmp.split("\r\n")
-                    user_agent_data = tmp[2].split(" ")[1]
-                    print('user_agent_data: ', user_agent_data)
-                    print('tmp in user-agent: ', tmp)
-                    CONTENT_LENGTH = f"Content-Length: {len(user_agent_data)}\r\n"
-                    response = (
-                        OK_200
-                        + CONTENT_TYPE
-                        + CONTENT_LENGTH
-                        + END_HEADER
-                        + user_agent_data
-                    ).encode("utf-8")
+                if path == b'/': 
+                    response = OK_200
+                elif path == b'/echo/':
+                    body_data = path[6:] # already in bytes 
+                    CONTENT_LENGTH = get_content_length(body_data)
+                    response = OK_200 +  CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + body_data
+                elif path == b'/user-agent': 
+                    CONTENT_LENGTH = get_content_length(user_agent)
+                    response = OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + user_agent
                 else: 
-                    response = "HTTP/1.1 404 Not Found\r\n".encode('utf-8')
+                    response = NOT_FOUND_404
+                    
+                # response 
                 conn.send(response)
         except: 
             print('Server closed!')
