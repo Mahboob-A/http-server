@@ -1,36 +1,67 @@
+# Uncomment this to pass the first stage
 import socket
 import threading
+import sys
+from concurrent.futures import ThreadPoolExecutor
+
+OK_200 = b"HTTP/1.1 200 OK\r\n"
+NOT_FOUND_404 = b"HTTP/1.1 404 Not Found\r\n"
+END_HEADER = b"\r\n"
+CONTENT_TYPE = b"Content-Type: text/plain\r\n"
 
 
-def handle_conn(conn):
-    data = conn.recv(2048).decode()
-    lines = data.split("\r\n")
-    first_line = lines[0]
-    path = first_line.split()[1]
-    if path == "/":
-        conn.send("HTTP/1.1 200 OK\r\n\r\n".encode())
-    elif path[:6] == "/echo/":
-        string = path[6:]
-        conn.send("HTTP/1.1 200 OK\r\n".encode())
-        conn.send("Content-Type: text/plain\r\n".encode())
-        conn.send(f"Content-Length: {len(string)}\r\n\r\n".encode())
-        conn.send(f"{string}".encode())
-    elif path == "/user-agent":
-        user_agent = lines[2].split()[1]
-        conn.send("HTTP/1.1 200 OK\r\n".encode())
-        conn.send("Content-Type: text/plain\r\n".encode())
-        conn.send(f"Content-Length: {len(user_agent)}\r\n\r\n".encode())
-        conn.send(f"{user_agent}".encode())
-    else:
-        conn.send("HTTP/1.1 404 Not Found\r\n\r\n".encode())
+def get_content_length(content):
+    return f"Content-Length: {len(content)}\r\n".encode("utf-8")
+
+
+def handle_connections(conn):
+    with conn:
+        # all data in bytes
+        data = conn.recv(1024)
+        headers = data.split(b"\r\n")
+        path = headers[0].split()[1]
+        user_agent = headers[2].split()[1]  # user_agent:  b'curl/7.81.0'
+
+        print("headers: ", headers)
+        print("path: ", path)
+        print("user_agent: ", user_agent)
+
+        if path == b"/":
+            response = OK_200 + END_HEADER
+        elif path.startswith(b"/echo/"):
+            body_data = path[6:]  # already in bytes
+            CONTENT_LENGTH = f"Content-Length: {len(body_data)}\r\n".encode("utf-8")
+            response = (
+                OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + body_data
+            )
+        elif path == b"/user-agent":
+            CONTENT_LENGTH = f"Content-Length: {len(user_agent)}\r\n".encode("utf-8")
+            response = (
+                OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + user_agent
+            )
+        else:
+            response = NOT_FOUND_404 + END_HEADER
+    conn.send(response)
 
 
 def main():
-    print('server started...')
-    server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
+    print("Server is starting ... ")
+    HOST = "127.0.0.1"
+    PORT = 4221
+
+    # try:
+    socket_server = socket.create_server((HOST, PORT), reuse_port=False)
     while True:
-        conn, addr = server_socket.accept()  # wait for client
-        threading.Thread(target=handle_conn, args=[conn]).start()
+        conn, addr = socket_server.accept()
+        print("Connected to: {}:{}".format(addr[0], addr[1]))
+        worker = threading.Thread(target=handle_connections, args=(conn,))
+        worker.start()
+    # except KeyboardInterrupt:
+    #     print("Server is shutting down...")
+    #     sys.exit(0)
+    # except Exception as e:
+    #     print("An error occurred:", e)
+    #     sys.exit(1)
 
 
 if __name__ == "__main__":
