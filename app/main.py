@@ -12,6 +12,7 @@ END_HEADER = "\r\n"
 BODY_END_HEADER = "\r\n"
 CONTENT_TYPE = "Content-Type: text/plain\r\n"
 FILE_CONTENT_TYPE = "Content-Type: application/octet-stream"
+OK_201 = "HTTP/1.1 201 OK\r\n\r\n"
 
 
 def get_content_length(content):
@@ -20,9 +21,11 @@ def get_content_length(content):
 
 def handle_connections(conn, directory):
     print('dir in func: ', directory)
-    data = conn.recv(1024).decode('utf-8')
+    raw_data = conn.recv(1024)
+    data = raw_data.decode('utf-8')
     headers = data.split()
     path = headers[1]
+    request = headers[0]
 
     print("headers: ", headers)
     print("path: ", path)
@@ -46,7 +49,7 @@ def handle_connections(conn, directory):
             OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + user_agent + BODY_END_HEADER
         )
         conn.send(response.encode("utf-8"))
-    elif ("/files/" in path):  
+    elif "/files/" in path and request == 'GET':  
         print('path in elif files: ', path)
         print('actual dir name: ', path[7:])
         print('dir in elif: ', directory)
@@ -72,6 +75,13 @@ def handle_connections(conn, directory):
         else:
             response = NOT_FOUND_404 + END_HEADER
             conn.send(response.encode("utf-8"))
+    elif 'files' in path and request == 'POST': 
+        filename = path[7:]
+        file_path = os.path.join(directory, filename)
+        with open(file_path, "wb") as f:
+            f.write(raw_data.split(b"\r\n\r\n", 1)[1])
+        response = "HTTP/1.1 201 OK\r\n\r\n"
+        conn.send(OK_201.encode("utf-8"))
     else:
         response = NOT_FOUND_404 + END_HEADER
         conn.send(response.encode("utf-8"))
