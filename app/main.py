@@ -45,7 +45,9 @@ def handle_connections(conn, directory):
             OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + user_agent + BODY_END_HEADER
         )
         conn.send(response.encode("utf-8"))
-    elif "/file/" in path:     
+    elif (
+        "/files/" in path
+    ):  # headers:  ['GET', '/files/237_scooby_Coo_dumpty', 'HTTP/1.1', 'Host:', 'localhost:4221', 'User-Agent:', 'Go-http-client/1.1', 'Accept-Encoding:', 'gzip']
         file_path = os.path.join(directory, path[7:])
         if os.path.exists(file_path):
             with open(file_path, "rb") as f:
