@@ -38,12 +38,13 @@ def handle_connections(conn):
         elif path == b"/user-agent":
             user_agent = user_agent.decode('utf-8')
             CONTENT_LENGTH = f"Content-Length: {len(user_agent)}\r\n".encode("utf-8")
+            print(type(CONTENT_LENGTH))
             response = (
                 OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + user_agent
             )
         else:
             response = NOT_FOUND_404 + END_HEADER
-    conn.send(response)
+        conn.send(response)
 
 
 def main():
