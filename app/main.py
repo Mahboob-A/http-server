@@ -15,40 +15,39 @@ def get_content_length(content):
 
 
 def handle_connections(conn):
-    with conn:
-        # all data in bytes
-        data = conn.recv(1024)
-        headers = data.split(b"\r\n")
-        path = headers[0].split()[1]
-        user_agent = headers[2].split()[1]  # user_agent:  b'curl/7.81.0'
+    # all data in bytes
+    data = conn.recv(1024)
+    headers = data.split(b"\r\n")
+    path = headers[0].split()[1]
+    user_agent = headers[2].split()[1]  # user_agent:  b'curl/7.81.0'
 
-        print("headers: ", headers)
-        print("path: ", path)
-        print("user_agent: ", user_agent)
+    print("headers: ", headers)
+    print("path: ", path)
+    print("user_agent: ", user_agent)
 
-        if path == b"/":
-            response = OK_200 + END_HEADER
-            conn.send(response)
-        elif path.startswith(b"/echo/"):
-            body_data = path[6:]  # already in bytes
-            # body_data = body_data.decode('utf-8')
-            CONTENT_LENGTH = f"Content-Length: {len(body_data)}\r\n".encode("utf-8")
-            response = (
-                OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + body_data
-            )
-            conn.send(response)
-        elif path == b"/user-agent":
-            # user_agent = user_agent.decode('utf-8')
-            CONTENT_LENGTH = f"Content-Length: {len(user_agent)}\r\n".encode("utf-8")
-            print(type(CONTENT_LENGTH))
-            response = (
-                OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + user_agent
-            )
-            conn.send(response)
-        else:
-            response = NOT_FOUND_404 + END_HEADER
-            conn.send(response)
-
+    if path == b"/":
+        response = OK_200 + END_HEADER
+        conn.send(response)
+    elif path.startswith(b"/echo/"):
+        body_data = path[6:]  # already in bytes
+        # body_data = body_data.decode('utf-8')
+        CONTENT_LENGTH = f"Content-Length: {len(body_data)}\r\n".encode("utf-8")
+        response = (
+            OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + body_data
+        )
+        conn.send(response)
+    elif path == b"/user-agent":
+        # user_agent = user_agent.decode('utf-8')
+        CONTENT_LENGTH = f"Content-Length: {len(user_agent)}\r\n".encode("utf-8")
+        print(type(CONTENT_LENGTH))
+        response = (
+            OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + user_agent
+        )
+        conn.send(response)
+    else:
+        response = NOT_FOUND_404 + END_HEADER
+        conn.send(response)
+    
 
 def main():
     print("Server is starting ... ")
