@@ -2,27 +2,29 @@
 import socket
 import threading
 import sys
-from concurrent.futures import ThreadPoolExecutor
+import os
+import argparse
+import mimetypes
 
 OK_200 = "HTTP/1.1 200 OK\r\n"
 NOT_FOUND_404 = "HTTP/1.1 404 Not Found\r\n"
 END_HEADER = "\r\n"
 BODY_END_HEADER = "\r\n"
 CONTENT_TYPE = "Content-Type: text/plain\r\n"
+FILE_CONTENT_TYPE = "Content-Type: application/octet-stream"
 
 
 def get_content_length(content):
     return f"Content-Length: {len(content)}\r\n"
 
 
-def handle_connections(conn):
+def handle_connections(conn, directory):
     data = conn.recv(1024).decode('utf-8')
     headers = data.split()
     path = headers[1]
 
     print("headers: ", headers)
     print("path: ", path)
-
 
     if path == "/":
         response = OK_200 + END_HEADER
@@ -43,6 +45,17 @@ def handle_connections(conn):
             OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + user_agent + BODY_END_HEADER
         )
         conn.send(response.encode("utf-8"))
+    elif "/file/" in path:     
+        file_path = os.path.join(directory, path[7:])
+        if os.path.exists(file_path):
+            with open(file_path, "rb") as f:
+                file_contents = f.read()
+            conn.send(
+                f"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {len(file_contents)}\r\n\r\n".encode()
+                + file_contents
+            )
+        else:
+            conn.send("HTTP/1.1 404 Not Found\r\n\r\n".encode())
     else:
         response = NOT_FOUND_404 + END_HEADER
         conn.send(response.encode("utf-8"))
@@ -52,13 +65,17 @@ def main():
     print("Server is starting ... ")
     HOST = "127.0.0.1"
     PORT = 4221
-
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--directory", type=str, default=os.getcwd())
+    args = parser.parse_args()
     # try:
     socket_server = socket.create_server((HOST, PORT), reuse_port=False)
     while True:
         conn, addr = socket_server.accept()
         print("Connected to: {}:{}".format(addr[0], addr[1]))
-        worker = threading.Thread(target=handle_connections, args=(conn,))
+        worker = threading.Thread(
+            target=handle_connections, args=(conn, args.directory)
+        )
         worker.start()
     # except KeyboardInterrupt:
     #     print("Server is shutting down...")
