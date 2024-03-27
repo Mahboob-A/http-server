@@ -22,7 +22,7 @@ def handle_connections(conn):
 
     print("headers: ", headers)
     print("path: ", path)
-    print("user_agent: ", user_agent)
+
 
     if path == "/":
         response = OK_200 + END_HEADER
@@ -37,6 +37,7 @@ def handle_connections(conn):
         conn.send(response.encode('utf-8'))
     elif "/user-agent" in path:
         user_agent = headers[6]  # user_agent:  b'curl/7.81.0'
+        print("user_agent: ", user_agent)
         CONTENT_LENGTH = get_content_length(user_agent)
         response = (
             OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + user_agent + BODY_END_HEADER
