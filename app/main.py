@@ -78,9 +78,18 @@ def handle_connections(conn, directory):
     elif 'files' in path and request == 'POST': 
         filename = path[7:]
         file_path = os.path.join(directory, filename)
+        print(raw_data.split(b"\r\n\r\n", 1)[1])
+        a = raw_data.split(b"\r\n\r\n", 1)
+        print('a: ', a)
+        print(len(a))
+        b = raw_data.split(b"\r\n\r\n")[1]
+        print('b: ', b)
+        print(len(b))
+        c = raw_data.split(b"\r\n\r\n",)
+        print('c: ', c)
+        print(len(c))
         with open(file_path, "wb") as f:
-            f.write(raw_data.split(b"\r\n\r\n", 1)[1])
-        response = "HTTP/1.1 201 OK\r\n\r\n"
+            f.write(raw_data.split(b"\r\n\r\n")[1])
         conn.send(OK_201.encode("utf-8"))
     else:
         response = NOT_FOUND_404 + END_HEADER
