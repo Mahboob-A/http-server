@@ -30,11 +30,13 @@ def handle_connections(conn):
             response = OK_200 + END_HEADER
         elif path.startswith(b"/echo/"):
             body_data = path[6:]  # already in bytes
+            body_data = body_data.decode('utf-8')
             CONTENT_LENGTH = f"Content-Length: {len(body_data)}\r\n".encode("utf-8")
             response = (
                 OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + body_data
             )
         elif path == b"/user-agent":
+            user_agent = user_agent.decode('utf-8')
             CONTENT_LENGTH = f"Content-Length: {len(user_agent)}\r\n".encode("utf-8")
             response = (
                 OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + user_agent
