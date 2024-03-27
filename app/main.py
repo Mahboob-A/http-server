@@ -60,10 +60,9 @@ def handle_connections(conn, directory):
                     file_contents = f.read()
                 print('file-contents: ', file_contents)
                 print('200 OK')    
-                conn.sendall(
-                    str.encode(
-                        f"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {len(file_contents)}\r\n\r\n{file_contents}\r\n"
-                    )
+                conn.send(
+                    f"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {len(file_contents)}\r\n\r\n".encode()
+                    + file_contents
                 )
             except Exception as e:
                 print("Error:", e)
