@@ -83,7 +83,7 @@ def handle_connections(conn, directory):
 def main():
     print("Server is starting ... ")
     HOST = "127.0.0.1"
-    PORT = 4223
+    PORT = 4221
     parser = argparse.ArgumentParser()
     parser.add_argument("--directory", type=str, default=os.getcwd())
     args = parser.parse_args()
