@@ -4,50 +4,48 @@ import threading
 import sys
 from concurrent.futures import ThreadPoolExecutor
 
-OK_200 = b"HTTP/1.1 200 OK\r\n"
-NOT_FOUND_404 = b"HTTP/1.1 404 Not Found\r\n"
-END_HEADER = b"\r\n"
-CONTENT_TYPE = b"Content-Type: text/plain\r\n"
+OK_200 = "HTTP/1.1 200 OK\r\n"
+NOT_FOUND_404 = "HTTP/1.1 404 Not Found\r\n"
+END_HEADER = "\r\n"
+BODY_END_HEADER = "\r\n"
+CONTENT_TYPE = "Content-Type: text/plain\r\n"
 
 
 def get_content_length(content):
-    return f"Content-Length: {len(content)}\r\n".encode("utf-8")
+    return f"Content-Length: {len(content)}\r\n"
 
 
 def handle_connections(conn):
-    # all data in bytes
-    data = conn.recv(1024)
-    headers = data.split(b"\r\n")
-    path = headers[0].split()[1]
-    user_agent = headers[2].split()[1]  # user_agent:  b'curl/7.81.0'
+    data = conn.recv(1024).decode('utf-8')
+    headers = data.split()
+    path = headers[1]
+    user_agent = headers[6]  # user_agent:  b'curl/7.81.0'
 
     print("headers: ", headers)
     print("path: ", path)
     print("user_agent: ", user_agent)
 
-    if path == b"/":
+    if path == "/":
         response = OK_200 + END_HEADER
-        conn.send(response)
-    elif path.startswith(b"/echo/"):
-        body_data = path[6:]  # already in bytes
-        # body_data = body_data.decode('utf-8')
-        CONTENT_LENGTH = f"Content-Length: {len(body_data)}\r\n".encode("utf-8")
+        conn.send(response.encode("utf-8"))
+    elif "/echo/" in path: 
+        body_data = path[6:]  
+        print(body_data)
+        CONTENT_LENGTH = get_content_length(body_data)
         response = (
-            OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + body_data
+            OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + body_data + BODY_END_HEADER
         )
-        conn.send(response)
-    elif path == b"/user-agent":
-        # user_agent = user_agent.decode('utf-8')
-        CONTENT_LENGTH = f"Content-Length: {len(user_agent)}\r\n".encode("utf-8")
-        print(type(CONTENT_LENGTH))
+        conn.send(response.encode('utf-8'))
+    elif "/user-agent" in path:
+        CONTENT_LENGTH = get_content_length(user_agent)
         response = (
-            OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + user_agent
+            OK_200 + CONTENT_TYPE + CONTENT_LENGTH + END_HEADER + user_agent + BODY_END_HEADER
         )
-        conn.send(response)
+        conn.send(response.encode("utf-8"))
     else:
         response = NOT_FOUND_404 + END_HEADER
-        conn.send(response)
-    
+        conn.send(response.encode("utf-8"))
+
 
 def main():
     print("Server is starting ... ")
