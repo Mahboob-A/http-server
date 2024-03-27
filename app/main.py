@@ -53,6 +53,7 @@ def handle_connections(conn, directory):
         if os.path.exists(file_path):
             with open(file_path, "rb") as f:
                 file_contents = f.read()
+                print('file-contents: ', file_contents)
             conn.send(
                 f"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {len(file_contents)}\r\n\r\n".encode()
                 + file_contents 
