@@ -19,6 +19,7 @@ def get_content_length(content):
 
 
 def handle_connections(conn, directory):
+    print('dir in func: ', directory)
     data = conn.recv(1024).decode('utf-8')
     headers = data.split()
     path = headers[1]
@@ -46,39 +47,54 @@ def handle_connections(conn, directory):
         )
         conn.send(response.encode("utf-8"))
     elif ("/files/" in path):  
-        print('dir: ', directory)
+        print('path in elif files: ', path)
+        print('actual dir name: ', path[7:])
+        print('dir in elif: ', directory)
         file_path = os.path.join(directory, path[7:])
         print('curr-dir: ', os.getcwd())
         print('file path: ', file_path)
         if os.path.exists(file_path):
-            with open(file_path, "rb") as f:
-                file_contents = f.read()
+            print('true ===')
+            try:
+                with open(file_path, "rb") as f:
+                    file_contents = f.read()
                 print('file-contents: ', file_contents)
-            conn.send(
-                f"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {len(file_contents)}\r\n\r\n".encode()
-                + file_contents 
-            )
+                print('200 OK')    
+                conn.sendall(
+                    str.encode(
+                        f"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {len(file_contents)}\r\n\r\n{file_contents}\r\n"
+                    )
+                )
+            except Exception as e:
+                print("Error:", e)
+                print('404 NOT FOUND')
+                response = NOT_FOUND_404 + END_HEADER
+                conn.send(response.encode("utf-8"))
         else:
             response = NOT_FOUND_404 + END_HEADER
             conn.send(response.encode("utf-8"))
     else:
         response = NOT_FOUND_404 + END_HEADER
         conn.send(response.encode("utf-8"))
-        
+
     conn.close()
 
 
 def main():
     print("Server is starting ... ")
     HOST = "127.0.0.1"
-    PORT = 4221
-    curr_dir = os.getcwd()
+    PORT = 4223
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--directory", type=str, default=os.getcwd())
+    args = parser.parse_args()
+    directory = args.directory 
+    print('directory: ', directory)
     # try:
     socket_server = socket.create_server((HOST, PORT), reuse_port=False)
     while True:
         conn, addr = socket_server.accept()
         print("Connected to: {}:{}".format(addr[0], addr[1]))
-        worker = threading.Thread(target=handle_connections, args=(conn, curr_dir))
+        worker = threading.Thread(target=handle_connections, args=(conn, directory))
         worker.start()
     # except KeyboardInterrupt:
     #     print("Server is shutting down...")
